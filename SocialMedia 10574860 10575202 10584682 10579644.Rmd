@@ -1,0 +1,49 @@
+---
+title: "Comparison Between the Facebook Pages for Different Platforms"
+author: "Jack Brewer, Aden Webb, Avebry Haughton-Vowles, Kacper Mazur"
+date: "12 February 2018"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+We chose to do our presentation on the similarities and differences between various game platforms. We chose this as it is something we are familier with, due to us all being games development students, and it could be interesting to look at different variations of the same service.
+
+
+## Chosen Pages
+
+The three services we will be looking at are:
+
+- Xbox
+- Playstation
+- Steam
+
+We chose these as they are the most widely used platforms and so were likely to yield the most active FaceBook Pages.
+
+## Xbox and Playstation
+
+These two are both examples of console gaming platforms. They are usually cheaper to get into with a lower barrier of entry. There is a larger focus on major releases periodically throughout the year.
+
+We chose to use two examples of consoles because they are in direct competition so there is the possiblility of analysing similarities and differences between the two.
+
+## Steam
+
+Steam was picked to compare against the two console platforms. It is the primary method for gaming on a PC and therefore tends to have a higher barrier for enrty as a PC can be more expensive up-front than a console. 
+
+Steam also gets the major releases at distinct points throughout the year but has a much greater focus on smaller games releasing very rapidly; almost constantly.
+
+## Number of comments over a year (all 3)
+
+## Likes over a year
+
+## Negative/positive steam
+
+## negative/positive xbox
+
+## negative/positive playstation
+
+## Mood of responses in all three
