@@ -1,7 +1,7 @@
 setwd("E:\\A1-Math Uni\\Facebook Data")
 
 
-token <- "EAACEdEose0cBAKHZAjkB0IeENP4aaWxzuJYPQZB6qCiBH4756N6dhjQgpdBDIMDTICnvTA2ejAgCng0pEyzdOM999XO1a7ivBbEhUUZCFTLMFgmNZASCM1xPnSX8hP6qCN5ZCFfoMd8RsKZAZBq9mdtRrBdDnUN0kMDle57zO7Qgt7yFTdiiRbndZB5JFh2eBIcZD"
+token <- "EAACEdEose0cBAGaFYxtwZAqnuvFBluyaevbRtHnTVfrwAwEKhEavHNO7SUaZAOh2j1dCXfwL3a0zhT6v7ZCJrs6gtZCErJNFlAN8EmF9PmMrtffg8R3cjFWWPlZBoCiXqOL3XhZBuEG0mP2DqchfNgJREnhyDiBdp01BAh3TUYsrY54cb9oXOGZCzCAsAVXGA88PS0X0uh9LgZDZD"
 
 page_name <- "Steam"
 
@@ -33,6 +33,15 @@ for (i in 1:n){
 
 my_page <- do.call(rbind, df_daily)
 
+my_page <- my_page %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+
+head(my_page$datetime)
+
+my_page <- my_page %>% 
+  mutate(month = format(datetime, "%Y-%m"))
+
+head(my_page$month)
 my_page$likes_count
 my_page$comments_count
 my_page$shares_count
@@ -75,3 +84,4 @@ ggplot(monthly_summaries,
        subtitle = "Monthly Quantity Across Posts",
        x = "Month", 
        y = "Number") 
+
