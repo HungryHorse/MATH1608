@@ -1,0 +1,297 @@
+---
+title: "Comparison Between the Facebook Pages for Different Platforms"
+author: "Jack Brewer, Aden Webb, Avebry Haughton-Vowles, Kacper Mazur"
+date: "12 February 2018"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+#---Packages---
+library(Rfacebook)
+citation("Rfacebook")
+library(stringr) # Character manipulation
+library(dplyr) # Data wrangling
+library(ggplot2) # Graphics
+library(tidyr) # Turning wide data into long data
+library(tm) # Text mining
+library(wordcloud) # Word cloud
+library(network) # Network diagram
+library(curl) # Needed to get information about me and my friends
+library(httr) # Needed to get information about me and my friends
+library(lubridate) # For date manipulation
+library(scales) # To format axes
+library(wordcloud2)
+
+format.facebook.date <- function(datestring) {
+  date <- as.POSIXct(datestring, 
+                     format = "%Y-%m-%dT%H:%M:%S+0000", 
+                     tz = "GMT")
+  date
+}
+
+token <- "EAACEdEose0cBACvUIIcnHXVLZA5ELZBE6QZBduZBY6LkzFtVMYSyEVgp4ViqXZAIGZByc6p7D537sNYGagK5nPhtuL7P7YguyboJlghDgVGo7V3AwR7ZAjdiUYMCEMwMOzHw3FxR09SS5csUy0G8TP7ZCF4eOxnrPjjgZBc5Vj2K3H8GjPZAb4otadSHDw2HJSLs1xqK9WZBubF6QZDZD"
+
+```
+
+## Introduction
+
+We chose to do our presentation on the similarities and differences between various game platforms. We chose this as it is something we are familier with, due to us all being games development students, and it could be interesting to look at different variations of the same service.
+
+
+## Chosen Pages
+
+The three services we will be looking at are:
+
+- Xbox
+- Playstation
+- Steam
+
+We chose these as they are the most widely used platforms and so were likely to yield the most active FaceBook Pages.
+
+## Xbox and Playstation
+
+These two are both examples of console gaming platforms. They are usually cheaper to get into with a lower barrier of entry. There is a larger focus on major releases periodically throughout the year.
+
+We chose to use two examples of consoles because they are in direct competition so there is the possiblility of analysing similarities and differences between the two.
+
+## Steam
+
+Steam was picked to compare against the two console platforms. It is the primary method for gaming on a PC and therefore tends to have a higher barrier for enrty as a PC can be more expensive up-front than a console. 
+
+Steam also gets the major releases at distinct points throughout the year but has a much greater focus on smaller games releasing very rapidly; almost constantly.
+
+## Playstation
+
+```{r include=FALSE}
+page_name <- "PlayStation"
+number_required <- 1000
+dates <- seq(as.Date("2017/01/31"), as.Date("2018/01/31"), by = "day")
+n <- length(dates) - 1
+df_daily <- list()
+for (i in 1:n){
+  cat(as.character(dates[i]), " ") 
+  try(df_daily[[i]] <- getPage(page_name, token, 
+                               n = number_required, 
+                               since = dates[i], 
+                               until = dates[i + 1], 
+                               reactions = TRUE,
+                               api = "v2.9")) 
+  cat("\n")
+}
+my_page <- do.call(rbind, df_daily)
+
+dim(my_page)
+names(my_page)
+str(my_page)
+
+my_page <- my_page %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+
+head(my_page$datetime)
+
+my_page <- my_page %>% 
+  mutate(month = format(datetime, "%Y-%m"))
+
+head(my_page$month)
+
+monthly_summaries_wide <- my_page %>%
+  group_by(month) %>%
+  summarize("Average likes" = mean(likes_count),
+            "Average comments" = mean(comments_count),
+            "Average shares" = mean(shares_count),
+            #"Average love" = mean(love_count),
+            #"Average haha" = mean(haha_count),
+            #"Average wow" = mean(wow_count),
+            #"Average sad" = mean(sad_count), 
+            #"Average angry" = mean(angry_count),
+            "Number of posts" = n())
+
+monthly_summaries_wide 
+
+monthly_summaries <- monthly_summaries_wide %>% 
+  gather("Monthly_Quantity","Number", 2:5) 
+monthly_summaries
+```
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(monthly_summaries, 
+       aes(x = month, 
+           y = Number, 
+           group = Monthly_Quantity, 
+           colour = Monthly_Quantity)) +
+  geom_line(lwd = 1.5) + 
+  facet_wrap(~ Monthly_Quantity, scales = "free_y") + 
+  theme(axis.text.x = element_text(size = 14, angle = 270, hjust = 0, vjust = 0.5),
+        axis.text.y = element_text(size = 14), 
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16, angle = 270),
+        strip.text.x = element_text(size = 14),
+        title = element_text(size = 20), 
+        legend.position = "none") + 
+  labs(title = paste(page_name, "Facebook Page"), 
+       subtitle = "Monthly Quantity Across Posts",
+       x = "Month", 
+       y = "Number")
+```
+
+## Steam
+
+```{r, include=FALSE}
+page_name <- "Steam"
+
+number_required <- 1000 
+
+dateToUse <- "2018/01/31"
+
+dates <- seq(as.Date("2017/01/31"), as.Date(dateToUse), by = "day")
+dates
+
+n <- length(dates) - 1
+n
+
+df_daily <- list()
+
+for (i in 1:n){
+  
+  cat(as.character(dates[i]), " ") 
+  
+  try(df_daily[[i]] <- getPage(page_name, token, 
+                               n = number_required, 
+                               since = dates[i], 
+                               until = dates[i + 1], 
+                               reactions = TRUE,
+                               api = "v2.9")) 
+  
+  cat("\n")
+}
+
+my_page <- do.call(rbind, df_daily)
+
+my_page <- my_page %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+
+head(my_page$datetime)
+
+my_page <- my_page %>% 
+  mutate(month = format(datetime, "%Y-%m"))
+
+monthly_summaries_wide <- my_page %>%
+  group_by(month) %>%
+  summarize("Average likes" = mean(likes_count),
+            "Average comments" = mean(comments_count),
+            "Average shares" = mean(shares_count),
+            #"Average love" = mean(love_count),
+            #"Average haha" = mean(haha_count),
+            #"Average wow" = mean(wow_count),
+            #"Average sad" = mean(sad_count), 
+            #"Average angry" = mean(angry_count),
+            "Number of posts" = n())
+
+monthly_summaries <- monthly_summaries_wide %>% 
+  gather("Monthly_Quantity","Number", 2:5) 
+```
+
+```{r, echo=FALSE}
+ggplot(monthly_summaries, 
+       aes(x = month, 
+           y = Number, 
+           group = Monthly_Quantity, 
+           colour = Monthly_Quantity)) +
+  geom_line(lwd = 1.5) + # Specify line width 
+  facet_wrap(~ Monthly_Quantity, scales = "free_y") + # Use a free scale on the y-axis
+  theme(axis.text.x = element_text(size = 14, angle = 270, hjust = 0, vjust = 0.5), # For rotated labels
+        axis.text.y = element_text(size = 14), 
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16, angle = 270),
+        strip.text.x = element_text(size = 14),
+        title = element_text(size = 20), 
+        legend.position = "none") + 
+  labs(title = paste(page_name, "Facebook Page"), # Note the use of paste to create a title of the page name followed by some text (see below)
+       subtitle = "Monthly Quantity Across Posts",
+       x = "Month", 
+       y = "Number") 
+
+```
+
+##Xbox
+
+```{r, include=FALSE}
+page_name <- "xbox"
+number_required <- 1000
+Sys.Date()
+dates <- seq(as.Date("2017/01/31"), as.Date("2018/01/31"), by = "day")
+n <- length(dates) - 1
+df_daily <- list()
+#
+for (i in 1:n){
+  cat(as.character(dates[i]), " ") 
+  try(df_daily[[i]] <- getPage(page_name, token, 
+                               n = number_required, 
+                               since = dates[i], 
+                               until = dates[i + 1], 
+                               reactions = TRUE,
+                               api = "v2.9"))
+  cat("\n")
+}
+#
+my_page <- do.call(rbind, df_daily)
+# Facebook Stats
+
+my_page <- my_page %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+head(my_page$datetime)
+my_page <- my_page %>% 
+  mutate(month = format(datetime, "%Y-%m"))
+head(my_page$month)
+monthly_summaries_wide <- my_page %>%
+  group_by(month) %>%
+  summarize("Average likes" = mean(likes_count),
+            "Average comments" = mean(comments_count),
+            "Average shares" = mean(shares_count),
+            #"Average love" = mean(love_count),
+            #"Average haha" = mean(haha_count),
+            #"Average wow" = mean(wow_count),
+            #"Average sad" = mean(sad_count), 
+            #"Average angry" = mean(angry_count),
+            "Number of posts" = n())
+monthly_summaries_wide 
+monthly_summaries <- monthly_summaries_wide %>% 
+  gather("Monthly_Quantity","Number", 2:5) 
+monthly_summaries
+```
+
+```{r}
+ggplot(monthly_summaries, 
+       aes(x = month, 
+           y = Number, 
+           group = Monthly_Quantity, 
+           colour = Monthly_Quantity)) +
+  geom_line(lwd = 1.5) + # Specify line width 
+  facet_wrap(~ Monthly_Quantity, scales = "free_y") + 
+  theme(axis.text.x = element_text(size = 14, angle = 270, hjust = 0, vjust = 0.5), 
+        axis.text.y = element_text(size = 14), 
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16, angle = 270),
+        strip.text.x = element_text(size = 14),
+        title = element_text(size = 20), 
+        legend.position = "none") + 
+  labs(title = paste(page_name, "Facebook Page"), 
+       subtitle = "Monthly Quantity Across Posts",
+       x = "Month", 
+       y = "Number") 
+```
+
+
+## Number of comments over a year (all 3)
+
+## Likes over a year
+
+## Negative/positive steam
+
+## negative/positive xbox
+
+## negative/positive playstation
+
+## Mood of responses in all three
