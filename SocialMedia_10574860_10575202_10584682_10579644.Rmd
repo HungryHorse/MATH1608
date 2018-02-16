@@ -143,7 +143,7 @@ get.page.data <- function(page_name) {
 
 }
 
-token <- "EAACEdEose0cBAF0yytLy7ZBBkcSeuIFTcdsGoYbD69XNYyHdVwuQERJbMRf6o0vgCB6TmZATdGXqbq7ZB14wBtMeH5FSoLD6bhZCbKb7f4ZBK8BEzrCdjVBWDDpz9HZAsStbmKZBvA5AWZCgxPJsPhU7e5N6VI5qrZCvXdpxcANAnAJUsZA5be4vnmeiFXSIwzW4QuIQiDfhckxQZDZD"
+token <- "EAACEdEose0cBAK0RnlxImcisbCF6aBzTaThG9X69sKG3XQ2LWORCDxiZBETPVaZCWb5vsITk64MAMJ6OKFqRVm8bgndg1bfCudzg9FJRQqZBZAbYVpk2knF4GdqBaAQAWLmMZBEzQaVYlTIGSkP6XARts82s3X3JQ67WBKgCZBbgXxsGLkIaeTxFCgV2xtjmc9X0TGzK3mbAZDZD"
 
 
 ```
@@ -179,7 +179,7 @@ Steam also gets the major releases at distinct points throughout the year but ha
 
 ```{r include=FALSE}
 
-page_name <- "PlayStation"
+playstationPageName <- "PlayStation"
 number_required <- 1000
 dates <- seq(as.Date("2017/01/31"), as.Date("2018/01/31"), by = "day")
 n <- length(dates) - 1
@@ -187,7 +187,7 @@ df_daily <- list()
 
 for (i in 1:n){
   cat(as.character(dates[i]), " ")
-  try(df_daily[[i]] <- getPage(page_name, token,
+  try(df_daily[[i]] <- getPage(playstationPageName, token,
                                n = number_required,
                                since = dates[i],
                                until = dates[i + 1],
@@ -196,43 +196,31 @@ for (i in 1:n){
   cat("\n")
 }
 
-my_page <- do.call(rbind, df_daily)
+playstationPage <- do.call(rbind, df_daily)
 
-dim(my_page)
-names(my_page)
-str(my_page)
-
-my_page <- my_page %>%
+playstationPage <- playstationPage %>%
   mutate(datetime = format.facebook.date(created_time) )
 
-head(my_page$datetime)
+head(playstationPage$datetime)
 
-my_page <- my_page %>%
+playstationPage <- playstationPage %>%
   mutate(month = format(datetime, "%Y-%m"))
 
-head(my_page$month)
+head(playstationPage$month)
 
-monthly_summaries_wide <- my_page %>%
+playstation_monthly_summaries_wide <- playstationPage %>%
   group_by(month) %>%
   summarize("Average likes" = mean(likes_count),
             "Average comments" = mean(comments_count),
             "Average shares" = mean(shares_count),
-            #"Average love" = mean(love_count),
-            #"Average haha" = mean(haha_count),
-            #"Average wow" = mean(wow_count),
-            #"Average sad" = mean(sad_count),
-            #"Average angry" = mean(angry_count),
             "Number of posts" = n())
 
-monthly_summaries_wide
-
-monthly_summaries <- monthly_summaries_wide %>%
+playstation_monthly_summaries <- playstation_monthly_summaries_wide %>%
   gather("Monthly_Quantity","Number", 2:5)
-monthly_summaries
 ```
 
 ```{r echo=FALSE, warning=FALSE}
-ggplot(monthly_summaries, 
+ggplot(playstation_monthly_summaries, 
        aes(x = month, 
            y = Number, 
            group = Monthly_Quantity, 
@@ -246,36 +234,36 @@ ggplot(monthly_summaries,
         strip.text.x = element_text(size = 14),
         title = element_text(size = 20), 
         legend.position = "none") + 
-  labs(title = paste(page_name, "Facebook Page"), 
+  labs(title = paste(playstationPageName, "Facebook Page"), 
        subtitle = "Monthly Quantity Across Posts",
        x = "Month", 
        y = "Number")
 ```
 
-## negative/positive playstation
+## Negative and Positive Words in the Playstation Comments
 
 ```{r, include=FALSE}
-my_page$message
-my_page_existing_messages <- my_page %>% 
+playstationPage$message
+playstationPage_existing_messages <- playstationPage %>% 
   filter(!is.na(message))
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned = remove_http_www(message))
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[^[:alnum:]]",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[\u4E00-\u9FFF]+",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[\u3400-\u4DBF]+",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned = remove.numbers(message_cleaned))
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned = remove.spaces(message_cleaned))
-my_page_existing_messages <- my_page_existing_messages %>% 
+playstationPage_existing_messages <- playstationPage_existing_messages %>% 
   mutate(message_cleaned =  tolower(message_cleaned))
-my_page_existing_messages$message_cleaned
+playstationPage_existing_messages$message_cleaned
 
 #Word Counts/Frequency
-text_corpus <- Corpus(VectorSource(my_page_existing_messages$message_cleaned))
+text_corpus <- Corpus(VectorSource(playstationPage_existing_messages$message_cleaned))
 text_corpus
 
 new.stopwords <- c("http", "https", "ps4", "playstation", "sony")
@@ -294,22 +282,22 @@ word_count_ordered_df <- word_count_df %>%
 head(word_count_ordered_df)
 
 N <- 8
-words_freq_limited <- word_count_ordered_df[1:N,]
-words_freq_limited <- words_freq_limited %>% 
+ps_words_freq_limited <- word_count_ordered_df[1:N,]
+ps_words_freq_limited <- ps_words_freq_limited %>% 
   mutate(word = factor(word, levels = word))
-words_freq_limited$word
+ps_words_freq_limited$word
 ```
 
 ```{r, echo=FALSE}
 
 g_w_b <- rep(c("darkblue", "white", "black"), length = N)
-ggplot(words_freq_limited, 
+ggplot(ps_words_freq_limited, 
        aes(x = word, 
            y = freq)) +
   geom_col(fill = g_w_b, colour = "black", alpha = 0.9) + 
   # colour refers to the edge of the bars        
   # values of alpha less than 1 cause transparency
-  labs(title = paste("Most Common Words - ", page_name),
+  labs(title = paste("Most Common Words - ", playstationPageName),
        x = paste("Top", N, "Words"), 
        y = "Frequency") + 
   theme(axis.text = element_text(size = 14, color = "black"), 
@@ -322,7 +310,7 @@ ggplot(words_freq_limited,
 ## Steam
 
 ```{r, include=FALSE}
-page_name <- "Steam"
+steamPageName <- "Steam"
 
 number_required <- 1000 
 
@@ -340,7 +328,7 @@ for (i in 1:n){
   
   cat(as.character(dates[i]), " ") 
   
-  try(df_daily[[i]] <- getPage(page_name, token, 
+  try(df_daily[[i]] <- getPage(steamPageName, token, 
                                n = number_required, 
                                since = dates[i], 
                                until = dates[i + 1], 
@@ -350,34 +338,29 @@ for (i in 1:n){
   cat("\n")
 }
 
-my_page <- do.call(rbind, df_daily)
+steamPage <- do.call(rbind, df_daily)
 
-my_page <- my_page %>% 
+steamPage <- steamPage %>% 
   mutate(datetime = format.facebook.date(created_time) )
 
-head(my_page$datetime)
+head(steamPage$datetime)
 
-my_page <- my_page %>% 
+steamPage <- steamPage %>% 
   mutate(month = format(datetime, "%Y-%m"))
 
-monthly_summaries_wide <- my_page %>%
+steam_monthly_summaries_wide <- steamPage %>%
   group_by(month) %>%
   summarize("Average likes" = mean(likes_count),
             "Average comments" = mean(comments_count),
             "Average shares" = mean(shares_count),
-            #"Average love" = mean(love_count),
-            #"Average haha" = mean(haha_count),
-            #"Average wow" = mean(wow_count),
-            #"Average sad" = mean(sad_count), 
-            #"Average angry" = mean(angry_count),
             "Number of posts" = n())
 
-monthly_summaries <- monthly_summaries_wide %>% 
+steam_monthly_summaries <- steam_monthly_summaries_wide %>% 
   gather("Monthly_Quantity","Number", 2:5) 
 ```
 
 ```{r, echo=FALSE}
-ggplot(monthly_summaries, 
+ggplot(steam_monthly_summaries, 
        aes(x = month, 
            y = Number, 
            group = Monthly_Quantity, 
@@ -391,37 +374,36 @@ ggplot(monthly_summaries,
         strip.text.x = element_text(size = 14),
         title = element_text(size = 20), 
         legend.position = "none") + 
-  labs(title = paste(page_name, "Facebook Page"), # Note the use of paste to create a title of the page name followed by some text (see below)
+  labs(title = paste(steamPageName, "Facebook Page"), # Note the use of paste to create a title of the page name followed by some text (see below)
        subtitle = "Monthly Quantity Across Posts",
        x = "Month", 
        y = "Number") 
 
 ```
 
-## Negative/positive steam
+## Negative and Positive Words in the Steam Comments
 
 ```{r, include=FALSE}
-my_page$message
-my_page_existing_messages <- my_page %>% 
+steam_existing_messages <- steamPage %>% 
   filter(!is.na(message))
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned = remove_http_www(message))
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[^[:alnum:]]",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[\u4E00-\u9FFF]+",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[\u3400-\u4DBF]+",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned = remove.numbers(message_cleaned))
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned = remove.spaces(message_cleaned))
-my_page_existing_messages <- my_page_existing_messages %>% 
+steam_existing_messages <- steam_existing_messages %>% 
   mutate(message_cleaned =  tolower(message_cleaned))
-my_page_existing_messages$message_cleaned
+steam_existing_messages$message_cleaned
 
 #Word Counts/Frequency
-text_corpus <- Corpus(VectorSource(my_page_existing_messages$message_cleaned))
+text_corpus <- Corpus(VectorSource(steam_existing_messages$message_cleaned))
 text_corpus
 
 new.stopwords <- c("http", "https", "steam", "valve", "pc")
@@ -435,27 +417,27 @@ tdm_matrix[1:25, 1:25]
 word_count <- rowSums(tdm_matrix)
 head(word_count)
 word_count_df <- data.frame(word = names(word_count), freq = word_count)
-word_count_ordered_df <- word_count_df %>% 
+steam_word_count_ordered_df <- word_count_df %>% 
   arrange(desc(freq))
 head(word_count_ordered_df)
 
 N <- 8
-words_freq_limited <- word_count_ordered_df[1:N,]
-words_freq_limited <- words_freq_limited %>% 
+steam_words_freq_limited <- steam_word_count_ordered_df[1:N,]
+steam_words_freq_limited <- steam_words_freq_limited %>% 
   mutate(word = factor(word, levels = word))
-words_freq_limited$word
+steam_words_freq_limited$word
 ```
 
 
 ```{r, echo=FALSE}
 bg <- rep(c("gray0", "gray25", "gray50"), length = N)
-ggplot(words_freq_limited, 
+ggplot(steam_words_freq_limited, 
        aes(x = word, 
            y = freq)) +
   geom_col(fill = bg, colour = "black", alpha = 0.9) + 
   # colour refers to the edge of the bars        
   # values of alpha less than 1 cause transparency
-  labs(title = paste("Most common words in post to page", page_name),
+  labs(title = paste("Most common words in post to page", steamPageName),
        x = paste("Top", N, "Words"), 
        y = "Frequency") + 
   theme(axis.text = element_text(size = 13, color = "black"), 
@@ -467,7 +449,7 @@ ggplot(words_freq_limited,
 ##Xbox
 
 ```{r, include=FALSE}
-page_name <- "xbox"
+xboxPageName <- "xbox"
 number_required <- 1000
 Sys.Date()
 dates <- seq(as.Date("2017/01/31"), as.Date("2018/01/31"), by = "day")
@@ -476,7 +458,7 @@ df_daily <- list()
 #
 for (i in 1:n){
   cat(as.character(dates[i]), " ") 
-  try(df_daily[[i]] <- getPage(page_name, token, 
+  try(df_daily[[i]] <- getPage(xboxPageName, token, 
                                n = number_required, 
                                since = dates[i], 
                                until = dates[i + 1], 
@@ -485,34 +467,29 @@ for (i in 1:n){
   cat("\n")
 }
 #
-my_page <- do.call(rbind, df_daily)
+xboxPage <- do.call(rbind, df_daily)
 # Facebook Stats
 
-my_page <- my_page %>% 
+xboxPage <- xboxPage %>% 
   mutate(datetime = format.facebook.date(created_time) )
-head(my_page$datetime)
-my_page <- my_page %>% 
+head(xboxPage$datetime)
+xboxPage <- xboxPage %>% 
   mutate(month = format(datetime, "%Y-%m"))
-head(my_page$month)
-monthly_summaries_wide <- my_page %>%
+head(xboxPage$month)
+xbox_monthly_summaries_wide <- xboxPage %>%
   group_by(month) %>%
   summarize("Average likes" = mean(likes_count),
             "Average comments" = mean(comments_count),
             "Average shares" = mean(shares_count),
-            #"Average love" = mean(love_count),
-            #"Average haha" = mean(haha_count),
-            #"Average wow" = mean(wow_count),
-            #"Average sad" = mean(sad_count), 
-            #"Average angry" = mean(angry_count),
             "Number of posts" = n())
-monthly_summaries_wide 
-monthly_summaries <- monthly_summaries_wide %>% 
+
+xbox_monthly_summaries <- xbox_monthly_summaries_wide %>% 
   gather("Monthly_Quantity","Number", 2:5) 
-monthly_summaries
+xbox_monthly_summaries
 ```
 
 ```{r}
-ggplot(monthly_summaries, 
+ggplot(xbox_monthly_summaries, 
        aes(x = month, 
            y = Number, 
            group = Monthly_Quantity, 
@@ -526,32 +503,33 @@ ggplot(monthly_summaries,
         strip.text.x = element_text(size = 14),
         title = element_text(size = 20), 
         legend.position = "none") + 
-  labs(title = paste(page_name, "Facebook Page"), 
+  labs(title = paste(xboxPageName, "Facebook Page"), 
        subtitle = "Monthly Quantity Across Posts",
        x = "Month", 
        y = "Number") 
 ```
 
-## negative/positive xbox
+## Negative and Positive Words in the Xbox Comments
 
 ```{r, include=FALSE}
-my_page_existing_messages <- my_page %>% 
+xbox_existing_messages <- xboxPage %>% 
   filter(!is.na(message))
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned = remove_http_www(message))
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[^[:alnum:]]",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[\u4E00-\u9FFF]+",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned = str_replace_all(message_cleaned, "[\u3400-\u4DBF]+",  " ") )
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned = remove.numbers(message_cleaned))
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned = remove.spaces(message_cleaned))
-my_page_existing_messages <- my_page_existing_messages %>% 
+xbox_existing_messages <- xbox_existing_messages %>% 
   mutate(message_cleaned =  tolower(message_cleaned))
-text_corpus <- Corpus(VectorSource(my_page_existing_messages$message_cleaned))
+
+text_corpus <- Corpus(VectorSource(xbox_existing_messages$message_cleaned))
 new.stopwords <- c("http", "https", "youtube", "xbox", "microsoft") 
 tdm <- TermDocumentMatrix(text_corpus, 
                           control = list(stopwords = c(new.stopwords, 
@@ -565,10 +543,10 @@ word_count_ordered_df <- word_count_df %>%
   arrange(desc(freq))
 head(word_count_ordered_df)
 N <- 8
-words_freq_limited <- word_count_ordered_df[1:N,]
-words_freq_limited <- words_freq_limited %>% 
+xbox_words_freq_limited <- word_count_ordered_df[1:N,]
+xbox_words_freq_limited <- xbox_words_freq_limited %>% 
   mutate(word = factor(word, levels = word))
-words_freq_limited$word
+xbox_words_freq_limited$word
 
 ```
 
@@ -578,17 +556,20 @@ words_freq_limited$word
 #
 col <- rep(c("limegreen", "white"), length = N)
 
-ggplot(words_freq_limited, 
+ggplot(xbox_words_freq_limited, 
        aes(x = word, 
            y = freq)) +
   geom_col(fill = col) + 
-  labs(title = paste("Most common words in post to page", page_name),
+  labs(title = paste("Most common words in post to page", xboxPageName),
        x = paste("Top", N, "Words"), 
        y = "Frequency") + 
   theme(axis.text = element_text(size = 13, color = "black"), 
         axis.title = element_text(size = 18, color = "black"),
         title = element_text(size = 20))
 ```
+
+## Possible Explanation for Differing Words and Moods
+
 
 
 ## Number of comments over a year (all 3)
