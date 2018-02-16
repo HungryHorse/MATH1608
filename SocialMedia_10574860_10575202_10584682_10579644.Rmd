@@ -143,7 +143,7 @@ get.page.data <- function(page_name) {
 
 }
 
-token <- "EAACEdEose0cBAK0RnlxImcisbCF6aBzTaThG9X69sKG3XQ2LWORCDxiZBETPVaZCWb5vsITk64MAMJ6OKFqRVm8bgndg1bfCudzg9FJRQqZBZAbYVpk2knF4GdqBaAQAWLmMZBEzQaVYlTIGSkP6XARts82s3X3JQ67WBKgCZBbgXxsGLkIaeTxFCgV2xtjmc9X0TGzK3mbAZDZD"
+token <- "EAACEdEose0cBAOD9nUMYLmvbgEr7wpVPGsgJWVCJazzqlc60NJfT8iRPQHQd4OkupNZCm6bDMsN4e7FWDZCt6Pv0pz5ALUmQvZAfDZAZBZCtyTgOaRFFWL4cqjSvtmdUlPld4t5uWs1WkGPjkVKREUuH7vri8vWZClxIZAvqapzKtZCcgA7lm71PZByZBEhIO1voqn1ZCZA8mPnwJrQZDZD"
 
 
 ```
@@ -570,18 +570,112 @@ ggplot(xbox_words_freq_limited,
 
 ## Possible Explanation for Differing Words and Moods
 
-
-
 ## Number of comments over a year (all 3)
+
+```{r include=FALSE}
+abc <- c(xbox_monthly_summaries_wide$`Average comments`, steam_monthly_summaries_wide$`Average comments`, playstation_monthly_summaries_wide$`Average comments`)
+
+
+namess <- c("xbox", "steam", "playstation")
+namess_f <- factor(namess)
+
+df <- data.frame(abc, namess_f)
+df
+
+
+```
+
+```{r echo=FALSE}
+ggplot(df , aes(x = namess_f, y = abc)) +
+  geom_boxplot() +
+  labs(title = "Box Plots to Show the Number of Comments", x = "Company Name", y = "Number of Comments") + 
+  theme(axis.text = element_text(size = 13, color = "black"), 
+        axis.title = element_text(size = 13, color = "black"),
+        title = element_text(size = 16))
+```
+
+
 
 ## Likes over a year
 
+```{r include=FALSE}
+
+playlikes <- playstationPage$likes_count
+xboxlikes <- xboxPage$likes_count
+steamlikes <- steamPage$likes_count
+
+playstationPage <- playstationPage %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+
+playstationPage <- playstationPage%>% 
+  mutate(month = format(datetime, "%Y-%m"))
+
+playstationPage <- select(playstationPage, likes_count, month)
+playstationPage
+
+xboxPage <- xboxPage %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+
+xboxPage <- xboxPage%>% 
+  mutate(month = format(datetime, "%Y-%m"))
+
+xboxPage <- select(xboxPage, likes_count, month)
+xboxPage
+
+steamPage <- steamPage %>% 
+  mutate(datetime = format.facebook.date(created_time) )
+
+steamPage <- steamPage%>% 
+  mutate(month = format(datetime, "%Y-%m"))
+
+steamPage <- select(steamPage, likes_count, month)
+steamPage
+
+steamPage$tag <- 1
+xboxPage$tag <- 2
+playstationPage$tag <- 3
 
 
+factor_1 <- function(x){
+  factor(x,
+         levels = c(1,2,3), labels = c("Steam", "Xbox", "Playstation"))
+}
 
+steamPage <- collect(steamPage)
+playstationPage <- collect(playstationPage)
+xboxPage <- collect(xboxPage)
 
+monthly_summaries_wide_steam <- steamPage %>%
+  group_by(month) %>%
+  summarize("Average likes" = mean(likes_count))
 
+monthly_summaries_wide_xbox <- xboxPage %>%
+  group_by(month) %>%
+  summarize("Average likes" = mean(likes_count))
 
+monthly_summaries_wide_playstation <- playstationPage %>%
+  group_by(month) %>%
+  summarize("Average likes" = mean(likes_count))
+
+monthly_summaries_wide_steam$tag <- 1
+monthly_summaries_wide_xbox$tag <- 2
+monthly_summaries_wide_playstation$tag <- 3
+
+monthly_summaries_wide_steam <- monthly_summaries_wide_steam %>% mutate_at(.vars = vars(3), .funs = funs(factor_1))
+monthly_summaries_wide_playstation <- monthly_summaries_wide_playstation %>% mutate_at(.vars = vars(3), .funs = funs(factor_1))
+monthly_summaries_wide_xbox <- monthly_summaries_wide_xbox %>% mutate_at(.vars = vars(3), .funs = funs(factor_1))
+
+combined <- data.frame(monthly_summaries_wide_steam)
+combined <- rbind.data.frame(monthly_summaries_wide_playstation, monthly_summaries_wide_xbox, monthly_summaries_wide_steam)
+combined
+```
+
+```{r echo=FALSE}
+ggplot(combined, aes(x = month, y = `Average likes`, col = tag, group = tag)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Month", y = "Average number of likes")
+```
 
 
 ## Mood of responses in all three
