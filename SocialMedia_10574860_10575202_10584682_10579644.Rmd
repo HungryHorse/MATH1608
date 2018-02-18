@@ -8,7 +8,6 @@ output: beamer_presentation
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-#---Packages---
 library(Rfacebook)
 citation("Rfacebook")
 library(stringr) # Character manipulation
@@ -143,9 +142,10 @@ get.page.data <- function(page_name) {
 
 }
 
-token <- "EAACEdEose0cBAOD9nUMYLmvbgEr7wpVPGsgJWVCJazzqlc60NJfT8iRPQHQd4OkupNZCm6bDMsN4e7FWDZCt6Pv0pz5ALUmQvZAfDZAZBZCtyTgOaRFFWL4cqjSvtmdUlPld4t5uWs1WkGPjkVKREUuH7vri8vWZClxIZAvqapzKtZCcgA7lm71PZByZBEhIO1voqn1ZCZA8mPnwJrQZDZD"
+pos <- scan("positive-words.txt", what = "character", comment.char = ";")
+neg <- scan("negative-words.txt", what = "character", comment.char = ";")
 
-
+token <- "EAACEdEose0cBAPpZCDCtuyjZBSrP019MkCyyVMjXlSePUXCxOCKS2PMlOnd8ZB3f1JMARrH6i1hSwmZAAGpkbyy1KR8mYn73XuqfZBcZAZCuIbmxs41m42yJOosnaPrdLzqMVxTN62UwMwjpMW4Asl1xGlU9BXrw8X0pW324qPXiL9hYYc9iv8vnqfnZAtAiVLFNImjEu9TFZBQZDZD"
 ```
 
 ## Introduction
@@ -242,7 +242,7 @@ ggplot(playstation_monthly_summaries,
 
 ## Negative and Positive Words in the Playstation Comments
 
-```{r, include=FALSE}
+```{r include=FALSE}
 playstationPage$message
 playstationPage_existing_messages <- playstationPage %>% 
   filter(!is.na(message))
@@ -266,7 +266,7 @@ playstationPage_existing_messages$message_cleaned
 text_corpus <- Corpus(VectorSource(playstationPage_existing_messages$message_cleaned))
 text_corpus
 
-new.stopwords <- c("http", "https", "ps4", "playstation", "sony")
+new.stopwords <- c("http", "https", "ps4", "playstation", "sony", "games")
 
 tdm <- TermDocumentMatrix(text_corpus, 
                           control = list(stopwords = c(new.stopwords, 
@@ -288,7 +288,7 @@ ps_words_freq_limited <- ps_words_freq_limited %>%
 ps_words_freq_limited$word
 ```
 
-```{r, echo=FALSE}
+```{r echo=FALSE}
 
 g_w_b <- rep(c("darkblue", "white", "black"), length = N)
 ggplot(ps_words_freq_limited, 
@@ -306,10 +306,47 @@ ggplot(ps_words_freq_limited,
      
 ```
 
+## Playstation psitivity value
+
+```{r include=FALSE}
+
+playstation_existing_messages_with_sentiments <- playstationPage_existing_messages %>% 
+  rowwise() %>% 
+  mutate(pos = match_with_negation(message_cleaned, pos), # Positive matches
+         neg = match_with_negation(message_cleaned, neg), # Negative matches
+         score = pos - neg) %>%
+  ungroup()
+playstation_existing_messages_with_sentiments %>% select(pos, neg, score) %>% head()
+playstation_existing_messages_with_sentiments <- playstation_existing_messages_with_sentiments %>% 
+  mutate(playstationPageName = playstationPageName)
+playstation_existing_messages_with_sentiments %>% select(pos, neg, score, playstationPageName) %>% head()
+playstation_existing_messages_with_sentiments %>% count(score)
+playstation_sentiment_means <- playstation_existing_messages_with_sentiments %>% 
+  summarize(playstation_mean_score = mean(score)) 
+
+```
+
+```{r echo=FALSE}
+ggplot(playstation_existing_messages_with_sentiments, 
+       aes(x = score)) +
+  geom_bar() + 
+  geom_vline(aes(xintercept = playstation_mean_score), data = playstation_sentiment_means) +
+  geom_text(aes(x = playstation_mean_score, 
+                y = Inf, 
+                label = signif(playstation_mean_score, 3)),
+            vjust = 2, 
+            data = playstation_sentiment_means) + 
+  scale_x_continuous(breaks = -10:15,  
+                     minor_breaks = NULL) + 
+  labs(title = paste("Sentiments towards", playstationPageName , "give a mean of", signif(playstation_sentiment_means$playstation_mean_score, 3)),
+       x = "Sentiment Score (positive minus negative matches)" , 
+       y = "Number of posts") + 
+  theme()
+```
 
 ## Steam
 
-```{r, include=FALSE}
+```{r include=FALSE}
 steamPageName <- "Steam"
 
 number_required <- 1000 
@@ -359,7 +396,7 @@ steam_monthly_summaries <- steam_monthly_summaries_wide %>%
   gather("Monthly_Quantity","Number", 2:5) 
 ```
 
-```{r, echo=FALSE}
+```{r echo=FALSE}
 ggplot(steam_monthly_summaries, 
        aes(x = month, 
            y = Number, 
@@ -383,7 +420,7 @@ ggplot(steam_monthly_summaries,
 
 ## Negative and Positive Words in the Steam Comments
 
-```{r, include=FALSE}
+```{r include=FALSE}
 steam_existing_messages <- steamPage %>% 
   filter(!is.na(message))
 steam_existing_messages <- steam_existing_messages %>% 
@@ -429,7 +466,7 @@ steam_words_freq_limited$word
 ```
 
 
-```{r, echo=FALSE}
+```{r echo=FALSE}
 bg <- rep(c("gray0", "gray25", "gray50"), length = N)
 ggplot(steam_words_freq_limited, 
        aes(x = word, 
@@ -445,10 +482,46 @@ ggplot(steam_words_freq_limited,
         title = element_text(size = 20))
 ```
 
+## Steam Positivity Value
+
+```{r include=FALSE}
+
+steam_existing_messages_with_sentiments <- steam_existing_messages %>% 
+  rowwise() %>% 
+  mutate(pos = match_with_negation(message_cleaned, pos), # Positive matches
+         neg = match_with_negation(message_cleaned, neg), # Negative matches
+         score = pos - neg) %>%
+  ungroup()
+steam_existing_messages_with_sentiments %>% select(pos, neg, score) %>% head()
+steam_existing_messages_with_sentiments <- steam_existing_messages_with_sentiments %>% 
+  mutate(steamPageName = steamPageName)
+steam_existing_messages_with_sentiments %>% select(pos, neg, score, steamPageName) %>% head()
+steam_existing_messages_with_sentiments %>% count(score)
+steam_sentiment_means <- steam_existing_messages_with_sentiments %>% 
+  summarize(steam_mean_score = mean(score)) 
+
+```
+
+```{r echo=FALSE}
+ggplot(steam_existing_messages_with_sentiments, 
+       aes(x = score)) +
+  geom_bar() + 
+  geom_vline(aes(xintercept = steam_mean_score), data = steam_sentiment_means) +
+  geom_text(aes(x = steam_mean_score, 
+                y = Inf, 
+                label = signif(steam_mean_score, 3)),
+            vjust = 2, 
+            data = steam_sentiment_means) + 
+  scale_x_continuous(breaks = -10:15,  
+                     minor_breaks = NULL) + 
+  labs(title = paste("Sentiments towards", steamPageName , "give a mean of", signif(steam_sentiment_means$steam_mean_score, 3)),
+       x = "Sentiment Score (positive minus negative matches)" , 
+       y = "Number of posts") 
+```
 
 ##Xbox
 
-```{r, include=FALSE}
+```{r include=FALSE}
 xboxPageName <- "xbox"
 number_required <- 1000
 Sys.Date()
@@ -488,7 +561,7 @@ xbox_monthly_summaries <- xbox_monthly_summaries_wide %>%
 xbox_monthly_summaries
 ```
 
-```{r}
+```{r echo=FALSE}
 ggplot(xbox_monthly_summaries, 
        aes(x = month, 
            y = Number, 
@@ -511,7 +584,7 @@ ggplot(xbox_monthly_summaries,
 
 ## Negative and Positive Words in the Xbox Comments
 
-```{r, include=FALSE}
+```{r include=FALSE}
 xbox_existing_messages <- xboxPage %>% 
   filter(!is.na(message))
 xbox_existing_messages <- xbox_existing_messages %>% 
@@ -550,7 +623,7 @@ xbox_words_freq_limited$word
 
 ```
 
-```{r}
+```{r echo=FALSE}
 #plots
 #-----------------------------
 #
@@ -568,7 +641,52 @@ ggplot(xbox_words_freq_limited,
         title = element_text(size = 20))
 ```
 
+## Xbox Positivity Value
+
+```{r include=FALSE}
+
+xbox_existing_messages_with_sentiments <- xbox_existing_messages %>% 
+  rowwise() %>% 
+  mutate(pos = match_with_negation(message_cleaned, pos), # Positive matches
+         neg = match_with_negation(message_cleaned, neg), # Negative matches
+         score = pos - neg) %>%
+  ungroup()
+xbox_existing_messages_with_sentiments %>% select(pos, neg, score) %>% head()
+xbox_existing_messages_with_sentiments <- xbox_existing_messages_with_sentiments %>% 
+  mutate(xboxPageName = xboxPageName)
+xbox_existing_messages_with_sentiments %>% select(pos, neg, score, xboxPageName) %>% head()
+xbox_existing_messages_with_sentiments %>% count(score)
+xbox_sentiment_means <- xbox_existing_messages_with_sentiments %>% 
+  summarize(xbox_mean_score = mean(score)) 
+
+```
+
+```{r echo=FALSE}
+ggplot(xbox_existing_messages_with_sentiments, 
+       aes(x = score)) +
+  geom_bar() + 
+  geom_vline(aes(xintercept = xbox_mean_score), data = xbox_sentiment_means) +
+  geom_text(aes(x = xbox_mean_score, 
+                y = Inf, 
+                label = signif(xbox_mean_score, 3)),
+            vjust = 2, 
+            data = xbox_sentiment_means) + 
+  scale_x_continuous(breaks = -10:15,  
+                     minor_breaks = NULL) + 
+  labs(title = paste("Sentiments towards", xboxPageName , "give a mean of", signif(xbox_sentiment_means$xbox_mean_score, 3)),
+       x = "Sentiment Score (positive minus negative matches)" , 
+       y = "Number of posts") 
+```
+
 ## Possible Explanation for Differing Words and Moods
+
+From the cmoparisons of the words used in posts for each company, we can see some distinct themes becoming clear.
+
+- Steam words tend to focus on new things and anything that might be upcoming. There is also a focus on sales as this is a alrge part of steams business strategy.
+
+- Playstation appers to do a similar thing with words like "new" and "upcoming", drawing attenion to the new games that are coming to their platform.
+
+- Xbox however seems to take a different approach. Among the most common words are things like "mature" or "rating". This shows that the company may be more open with the ratings of their games and try to make sure to sell them to the right audience. It could also show an increased level of formality (including required information)
 
 ## Number of comments over a year (all 3)
 
@@ -594,6 +712,13 @@ ggplot(df , aes(x = namess_f, y = abc)) +
         title = element_text(size = 16))
 ```
 
+## Comment numbers explained
+
+From these boxplots we can see that xbox has the most regular number of comments over the year, while having slightly more on average then the othe two.
+
+Playstation has a much wider variation in the number of its comments - potentially meaning a larger number of "interactive posts" such as giveaways. These one off events would lead to very high outliers in the number of comments on a post.
+
+Steam lies somewhere between the two, with some larger outliers.
 
 
 ## Likes over a year
@@ -623,7 +748,7 @@ xboxPage <- select(xboxPage, likes_count, month)
 xboxPage
 
 steamPage <- steamPage %>% 
-  mutate(datetime = format.facebook.date(created_time) )
+  mutate(datetime = format.facebook.date(created_time))
 
 steamPage <- steamPage%>% 
   mutate(month = format(datetime, "%Y-%m"))
@@ -674,8 +799,54 @@ combined
 ggplot(combined, aes(x = month, y = `Average likes`, col = tag, group = tag)) +
   geom_point() +
   geom_line() +
-  labs(x = "Month", y = "Average number of likes")
+  labs(x = "Month", y = "Average number of likes") +
+  theme(axis.text = element_text(size = 7, color = "black"), 
+        axis.title = element_text(size = 13, color = "black"),
+        title = element_text(size = 16))
 ```
 
+## Correlations
 
-## Mood of responses in all three
+- Xbox
+```{r}
+cor(xbox_monthly_summaries_wide$`Average likes`, xbox_monthly_summaries_wide$`Average comments`)
+```
+From this value we can see a fairly strong positive correlation between likes and comments on the xbox facebook page.
+
+- Playstation
+```{r}
+cor(playstation_monthly_summaries_wide$`Average likes`, playstation_monthly_summaries_wide$`Average comments`)
+```
+This is a fairly positive correlation but it is the lowest of the three. This shows that people tend to either like or comment on the facebook page.
+
+
+## Correlations Continued
+
+- Steam
+```{r}
+cor(steam_monthly_summaries_wide$`Average likes`, steam_monthly_summaries_wide$`Average comments`)
+```
+Steam has the strongest correlation between comments and likes. This shows that of the three pages steam has the most users which will like a post when they comment rather than one or the other.
+
+
+## t-Test Comparing Number of Comments with Likes
+
+When we compare the number of comments to the number of likes using a t-test - the following p-value can be gained.
+```{r include=FALSE}
+
+comments_likes_df = data.frame(combined$month, combined$`Average likes`, df$abc) 
+
+names(comments_likes_df)[names(comments_likes_df) == 'combined..Average.likes.'] <- 'Likes'
+names(comments_likes_df)[names(comments_likes_df) == 'df.abc'] <- 'Comments'
+names(comments_likes_df)[names(comments_likes_df) == 'combined.month'] <- 'Month'
+
+```
+
+```{r echo=FALSE}
+cor(comments_likes_df$Likes, comments_likes_df$Comments)
+m <- lm(Likes ~ Comments, data = comments_likes_df)
+summary(m)$coefficient[2,4]
+```
+
+Because the p value is greater than 0.05 we can conclude that there is no significant connection between the number of comments made in a month and the number of likes recieved in a month.
+
