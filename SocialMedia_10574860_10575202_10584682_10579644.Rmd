@@ -145,7 +145,7 @@ get.page.data <- function(page_name) {
 pos <- scan("positive-words.txt", what = "character", comment.char = ";")
 neg <- scan("negative-words.txt", what = "character", comment.char = ";")
 
-token <- "EAACEdEose0cBAPpZCDCtuyjZBSrP019MkCyyVMjXlSePUXCxOCKS2PMlOnd8ZB3f1JMARrH6i1hSwmZAAGpkbyy1KR8mYn73XuqfZBcZAZCuIbmxs41m42yJOosnaPrdLzqMVxTN62UwMwjpMW4Asl1xGlU9BXrw8X0pW324qPXiL9hYYc9iv8vnqfnZAtAiVLFNImjEu9TFZBQZDZD"
+token <- "EAACEdEose0cBALD6saZA0MvKRxxhYSMqsZCMUUz19rGfxFG2LIJVky46b5PuVZAeniPNhBfNZCJcuDNLLTvQVnkLqbNZBtiTExYYvwZBLdXE20Nzx28PrRvd8SZCPftVCl2KrajQOGHVq4UeTbunZAHRAPSIpXVQOMMMripZAJvYYWwxnwbksWKgpXV0cph3uV4DvwTrLRTfnXQZDZD"
 ```
 
 ## Introduction
@@ -826,27 +826,98 @@ This is a fairly positive correlation but it is the lowest of the three. This sh
 ```{r}
 cor(steam_monthly_summaries_wide$`Average likes`, steam_monthly_summaries_wide$`Average comments`)
 ```
-Steam has the strongest correlation between comments and likes. This shows that of the three pages steam has the most users which will like a post when they comment rather than one or the other.
+Steam has the strongest correlation between comments and likes. This shows that of the three pages steam has the most users which will like a post when they comment rather than one or the other. 
 
+## Potential conclusion to be drawn
 
-## t-Test Comparing Number of Comments with Likes
+As we can see from the early graphs for each page, they all have an overall increase in post numbers during the course of a year. 
 
-When we compare the number of comments to the number of likes using a t-test - the following p-value can be gained.
-```{r include=FALSE}
+Xbox has less posts than some of the other pages, but has a very high rate of interaction with their posts. This shows a success for their marketing as they have the fewest posts making the largest interest.
 
-comments_likes_df = data.frame(combined$month, combined$`Average likes`, df$abc) 
+Playstation has a very large number of posts each month and also a very large rate of interaction. This is another method which also works in the companies favour - it may however be a greater impact on the companies resources.
 
-names(comments_likes_df)[names(comments_likes_df) == 'combined..Average.likes.'] <- 'Likes'
-names(comments_likes_df)[names(comments_likes_df) == 'df.abc'] <- 'Comments'
-names(comments_likes_df)[names(comments_likes_df) == 'combined.month'] <- 'Month'
+## Conclusions continued
+
+Steam has a very low number of posts compared to the other two. It is not a significantly smaller company so therefore this shows that the company must be relying on other platforms and online communities. Steam is built for pc gamers, and those who game on a computer don't tend to interact with facebook as steam has its own chat system and social media aspects.
+
+Playstation and Xbox do not have this additional social media aspect so they are reliant on other platforms (such as facebook)
+
+## T-test Comparing Likes Between Steam and Xbox
+
+The following t-test will be to determine whether or not the number of likes on these two pages are statistically different.
+
+The null hypothesis for this test is that the values are not significantly different. This means that the hypothsis is that the values are different between the two pages.
+
+if p value is smaller that 0.05 there is a difference 
+```{r include=FALSE, include=FALSE, r include=FALSE}
+likes_df = data.frame(steam_monthly_summaries_wide$`Average likes`, xbox_monthly_summaries_wide$`Average likes`)
+
+colnames(likes_df)[1] <- "SteamAverage"
+colnames(likes_df)[2] <- "XboxAverage"
+
+likes_df_long <- likes_df %>% gather("PageName", "LikesNumber", 1:2)
+
+likes_df_long
 
 ```
 
-```{r echo=FALSE}
-cor(comments_likes_df$Likes, comments_likes_df$Comments)
-m <- lm(Likes ~ Comments, data = comments_likes_df)
-summary(m)$coefficient[2,4]
+## P value 
+```{r echo=FALSE, echo=FALSE, r echo=FALSE}
+t.test(likes_df_long$LikesNumber ~ likes_df_long$PageName, data = likes_df_long, var.equal = TRUE)$p.value
 ```
 
-Because the p value is greater than 0.05 we can conclude that there is no significant connection between the number of comments made in a month and the number of likes recieved in a month.
+From this P-Value we can see that there is a statistical difference between the likes count for steam and Xbox. This in turn means that our analysis of the likes count is valid as they are different enough to be compared.
+
+## T-test Comparing Likes Between Playstation and Xbox
+
+The following t-test will be to determine whether or not the number of likes on these two pages are statistically different.
+
+The null hypothesis for this test is that the values are not significantly different. This means that the hypothsis is that the values are different between the two pages.
+
+if p value is smaller that 0.05 there is a difference 
+```{r include=FALSE, include=FALSE, r include=FALSE}
+likes_df = data.frame(playstation_monthly_summaries_wide$`Average likes`, xbox_monthly_summaries_wide$`Average likes`)
+
+colnames(likes_df)[1] <- "PlaystationAverage"
+colnames(likes_df)[2] <- "XboxAverage"
+
+likes_df_long <- likes_df %>% gather("PageName", "LikesNumber", 1:2)
+
+likes_df_long
+
+```
+
+## P value 
+```{r echo=FALSE, echo=FALSE, r echo=FALSE}
+t.test(likes_df_long$LikesNumber ~ likes_df_long$PageName, data = likes_df_long, var.equal = TRUE)$p.value
+```
+
+From this P-Value we can see that there is no statistical difference between the likes count for Playstation and Xbox. This means that for the sake of any of our comparisons Xbox and Playstation are to be considered the same.
+
+## T-test Comparing Likes Between Playstation and Steam
+
+The following t-test will be to determine whether or not the number of likes on these two pages are statistically different.
+
+The null hypothesis for this test is that the values are not significantly different. This means that the hypothsis is that the values are different between the two pages.
+
+if p value is smaller that 0.05 there is a difference 
+```{r include=FALSE, include=FALSE, r include=FALSE}
+likes_df = data.frame(playstation_monthly_summaries_wide$`Average likes`, steam_monthly_summaries_wide$`Average likes`)
+
+colnames(likes_df)[1] <- "PlaystationAverage"
+colnames(likes_df)[2] <- "SteamAverage"
+
+likes_df_long <- likes_df %>% gather("PageName", "LikesNumber", 1:2)
+
+likes_df_long
+
+```
+
+## P value 
+```{r echo=FALSE, echo=FALSE, r echo=FALSE}
+t.test(likes_df_long$LikesNumber ~ likes_df_long$PageName, data = likes_df_long, var.equal = TRUE)$p.value
+```
+
+From this P-Value we can see that there is a statistical difference between the likes count for Playstation and Steam. This means that our arguments and comparisons are considered statistically valid.
+
 
