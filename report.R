@@ -192,4 +192,51 @@ ggplot(set6, aes(x = IgE, y = allergy_total, col = family_allergy)) +
 
 #Task 7
 dataset
+#First create a new dataset only consisting of the food allergies
+foodAllergy <- dataset %>% select(egg_white, egg_yolk, milk, peanut, hazel, tomato, fish, wheat, apple)
+
+#For likert to work, each field must be a factor
+foodAllergy <- foodAllergy %>% mutate(egg_white = factor(egg_white, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(egg_yolk = factor(egg_yolk, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(milk = factor(milk, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(peanut = factor(peanut, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(hazel = factor(hazel, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(tomato = factor(tomato, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(fish = factor(fish, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(wheat = factor(wheat, levels = c(0, 1), labels = c("No", "Yes")))
+foodAllergy <- foodAllergy %>% mutate(apple = factor(apple, levels = c(0, 1), labels = c("No", "Yes")))
+
+#Turn it into a dataframe so we can use likert
+food_df <- data.frame(foodAllergy)
+food_df
+str(food_df)
+
+food_likert <- likert(food_df)
+
+plot(food_likert, ordered = FALSE)
+
+#Display allergies by gender
+foodGender <- likert(items = food_df,
+                     grouping = dataset$gender)
+plot(foodGender, ordered = FALSE)
+
+#Display allergies by pathogen
+foodPatho <- likert(items = food_df,
+                    grouping = dataset$pathology)
+plot(foodPatho, ordered = FALSE)
+
+#Display allergies by owning a pet
+plot(likert(items = food_df,
+            grouping = dataset$pets), ordered = FALSE)
+
+
+
+
+
+
+
+
+
+
+
 
